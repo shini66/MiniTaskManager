@@ -67,6 +67,11 @@ export default function TasksPage() {
     setPage(1)
   }
 
+  const handleLimitChange = (e) => {
+    setLimit(Number(e.target.value))
+    setPage(1)
+  }
+
   const handleSave = async (form) => {
     if (modalTask) {
       const { data } = await updateTask(modalTask.id, form)
@@ -158,33 +163,41 @@ export default function TasksPage() {
 
         <section>
           <div className="flex items-center justify-between gap-6 my-4">
+            <select
+              value={limit}
+              onChange={handleLimitChange}
+              className="border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value={5}>5 por página</option>
+              <option value={10}>10 por página</option>
+              <option value={20}>20 por página</option>
+            </select>
+
             <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
               Total de tareas ({totalTasks})
             </h2>
 
-            {totalPages > 1 && (
-              <div className="flex items-center gap-3">
-                <button
-                  disabled={page === 1}
-                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 transition-opacity"
-                >
-                  {"<"}
-                </button>
-                
-                <span className="text-sm text-gray-600 font-medium">
-                  {page} / {totalPages}
-                </span>
-                
-                <button
-                  disabled={page === totalPages}
-                  onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 transition-opacity"
-                >
-                  {">"}
-                </button>
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 transition-opacity"
+              >
+                {"<"}
+              </button>
+              
+              <span className="text-sm text-gray-600 font-medium">
+                {page} / {totalPages}
+              </span>
+              
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 transition-opacity"
+              >
+                {">"}
+              </button>
+            </div>
           </div>
 
           <ul className="flex flex-col gap-2">
