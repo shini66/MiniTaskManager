@@ -8,6 +8,15 @@ export default function TasksPage() {
   const { user, logout } = useAuth()
 
   const [tasks, setTasks] = useState([])
+
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('')
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
+
+  const [totalTasks, setTotalTasks] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -17,15 +26,17 @@ export default function TasksPage() {
 
   const fetchTasks = useCallback(async () => {
     try {
-      const { data } = await getTasks()
+      const { data } = await getTasks({ search, status, page, limit })
       // Normalizar id (usa _id de Mongoose si no existe `id`)
-      setTasks(data.map((t) => ({ ...t, id: t.id || t._id })))
+      setTasks(data.tasks.map((t) => ({ ...t, id: t.id || t._id })))
+      setTotalTasks(data.totalTasks || 0)
+      setTotalPages(data.totalPages || 1)
     } catch {
       setError('No se pudieron cargar las tareas')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [search, status, page, limit])
 
   useEffect(() => {
     fetchTasks()
@@ -44,6 +55,16 @@ export default function TasksPage() {
   const closeModal = () => {
     setModalOpen(false)
     setModalTask(null)
+  }
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value)
+    setPage(1)
+  }
+
+  const handleStatusChange = (e) => {
+    setStatus(e.target.value)
+    setPage(1)
   }
 
   const handleSave = async (form) => {
@@ -69,9 +90,6 @@ export default function TasksPage() {
     setTasks((prev) => prev.filter((t) => t.id !== id))
   }
 
-  const pending = tasks.filter((t) => !t.completed)
-  const completed = tasks.filter((t) => t.completed)
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -93,6 +111,24 @@ export default function TasksPage() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-6">
+
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Buscar tareas..."
+            value={search}
+            onChange={handleSearchChange}
+            className="flex-1 border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+          <select
+            value={status}
+            onChange={handleStatusChange}
+            className="border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">Todas</option>
+            <option value="pending">Pendientes</option>
+            <option value="completed">Completadas</option>
+          </select>
+        </div>
+
         {/* Botón nueva tarea */}
         <button
           onClick={openCreate}
@@ -112,53 +148,59 @@ export default function TasksPage() {
         )}
 
         {/* Sin tareas */}
-        {!loading && tasks.length === 0 && (
+        {!loading && totalTasks === 0 && (
           <p className="text-gray-400 text-sm text-center mt-8">
             Todavía no tenés tareas. ¡Creá una!
           </p>
         )}
 
-        {/* Pendientes */}
-        {pending.length > 0 && (
-          <section>
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-              Pendientes ({pending.length})
-            </h2>
-            <ul className="flex flex-col gap-2">
-              {pending.map((task) => (
-                <li key={task.id}>
-                  <TaskCard
-                    task={task}
-                    onToggle={handleToggle}
-                    onEdit={openEdit}
-                    onDelete={handleDelete}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+        
 
-        {/* Completadas */}
-        {completed.length > 0 && (
-          <section>
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-              Completadas ({completed.length})
+        <section>
+          <div className="flex items-center justify-between gap-6 my-4">
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Total de tareas ({totalTasks})
             </h2>
-            <ul className="flex flex-col gap-2">
-              {completed.map((task) => (
-                <li key={task.id}>
-                  <TaskCard
-                    task={task}
-                    onToggle={handleToggle}
-                    onEdit={openEdit}
-                    onDelete={handleDelete}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+
+            {totalPages > 1 && (
+              <div className="flex items-center gap-3">
+                <button
+                  disabled={page === 1}
+                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 transition-opacity"
+                >
+                  {"<"}
+                </button>
+                
+                <span className="text-sm text-gray-600 font-medium">
+                  {page} / {totalPages}
+                </span>
+                
+                <button
+                  disabled={page === totalPages}
+                  onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 transition-opacity"
+                >
+                  {">"}
+                </button>
+              </div>
+            )}
+          </div>
+
+          <ul className="flex flex-col gap-2">
+            {tasks.map((task) => (
+              <li key={task.id}>
+                <TaskCard
+                  task={task}
+                  onToggle={handleToggle}
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+
       </main>
 
       {/* Modal */}

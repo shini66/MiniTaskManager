@@ -1,6 +1,6 @@
 import http from './http'
 
-export const getTasks = () => http.get('/tasks/me')
+export const getTasks = async ({search, status, page, limit}) => http.get('/tasks/me', { params: { search, status, page, limit } })
 
 export const createTask = (data) => http.post('/tasks/create', data)
 
