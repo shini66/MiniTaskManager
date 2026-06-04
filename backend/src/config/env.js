@@ -26,6 +26,6 @@ export const env = {
     HOST: normalizeHost(process.env.HOST),
     JWT_SECRET: process.env.JWT_SECRET || "some_secret_key",
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "24h",
-    MONGO_DB_URI: process.env.MONGO_URI || "mongodb://localhost:27017",
+    MONGO_DB_URI: process.env.MONGODB_URI || "mongodb://localhost:27017",
     MONGO_DB_NAME: process.env.MONGO_DB_NAME || "task_manager",
 };
